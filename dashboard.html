@@ -20,6 +20,7 @@
     .em-teste { background:#FF9800; }
     .excluir { background:#9E9E9E; }
 
+    /* RESPONSIVIDADE MÓVEL */
     @media (max-width: 768px) {
         table, thead, tbody, th, td, tr { display:block; }
         th { display:none; }
@@ -61,7 +62,7 @@
     </select>
     <button onclick="adicionarCandidato()">Adicionar Candidato</button>
 
-    <select id="filtroUnidade" onchange="filtrarCandidatos()">
+    <select id="filtroUnidade" onchange="carregarCandidatos()">
         <option value="">Filtrar por Unidade</option>
         <option>Gávea</option>
         <option>Jardim Botânico</option>
@@ -87,117 +88,118 @@
 </table>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { 
+    getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot 
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC7b7aO7_LBCk2-HGPHMj1DB1Haty8eruc",
-  authDomain: "controle-de-testes.firebaseapp.com",
-  projectId: "controle-de-testes",
-  storageBucket: "controle-de-testes.firebasestorage.app",
-  messagingSenderId: "624074959757",
-  appId: "1:624074959757:web:604ed8e19227181fe8ebc4",
-  measurementId: "G-H8L8DMH6R2"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyC7b7aO7_LBCk2-HGPHMj1DB1Haty8eruc",
+    authDomain: "controle-de-testes.firebaseapp.com",
+    projectId: "controle-de-testes",
+    storageBucket: "controle-de-testes.firebasestorage.app",
+    messagingSenderId: "624074959757",
+    appId: "1:624074959757:web:604ed8e19227181fe8ebc4",
+    measurementId: "G-H8L8DMH6R2"
+  };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-function formatarData(dataStr){
-    const data = new Date(dataStr);
-    const dia = String(data.getDate()).padStart(2,'0');
-    const mes = String(data.getMonth()+1).padStart(2,'0');
-    const ano = data.getFullYear();
-    return `${dia}/${mes}/${ano}`;
-}
+  function formatarData(dataStr){
+      const data = new Date(dataStr);
+      const dia = String(data.getDate()).padStart(2,'0');
+      const mes = String(data.getMonth()+1).padStart(2,'0');
+      const ano = data.getFullYear();
+      return `${dia}/${mes}/${ano}`;
+  }
 
-async function adicionarCandidato() {
-    const nome = document.getElementById('nome').value;
-    const cargo = document.getElementById('cargo').value;
-    const unidade = document.getElementById('unidade').value;
-    const dias = parseInt(document.getElementById('dias').value);
-    const data = document.getElementById('data').value;
-    const horario = document.getElementById('horario').value;
-    const status = document.getElementById('status').value;
+  async function adicionarCandidato() {
+      const nome = document.getElementById('nome').value;
+      const cargo = document.getElementById('cargo').value;
+      const unidade = document.getElementById('unidade').value;
+      const dias = parseInt(document.getElementById('dias').value);
+      const data = document.getElementById('data').value;
+      const horario = document.getElementById('horario').value;
+      const status = document.getElementById('status').value;
 
-    if(!nome || !cargo || !unidade || !dias || !data || !horario || !status) {
-        alert("Preencha todos os campos!");
-        return;
-    }
+      if(!nome || !cargo || !unidade || !dias || !data || !horario || !status) {
+          alert("Preencha todos os campos!");
+          return;
+      }
 
-    try {
-        await addDoc(collection(db, "candidatos"), { nome, cargo, unidade, dias, data, horario, status });
-        limparFormulario();
-    } catch (e) {
-        console.error("Erro ao adicionar candidato: ", e);
-        alert("Erro ao adicionar candidato. Veja console.");
-    }
-}
+      try {
+          await addDoc(collection(db, "candidatos"), { nome, cargo, unidade, dias, data, horario, status });
+          limparFormulario();
+      } catch(e) {
+          console.error("Erro ao adicionar candidato:", e);
+          alert("Erro ao adicionar candidato. Veja o console para detalhes.");
+      }
+  }
 
-function limparFormulario() {
-    document.getElementById('nome').value = '';
-    document.getElementById('cargo').value = '';
-    document.getElementById('unidade').value = '';
-    document.getElementById('dias').value = '';
-    document.getElementById('data').value = '';
-    document.getElementById('horario').value = '';
-    document.getElementById('status').value = 'Em Teste';
-}
+  function limparFormulario() {
+      document.getElementById('nome').value = '';
+      document.getElementById('cargo').value = '';
+      document.getElementById('unidade').value = '';
+      document.getElementById('dias').value = '';
+      document.getElementById('data').value = '';
+      document.getElementById('horario').value = '';
+      document.getElementById('status').value = 'Em Teste';
+  }
 
-function carregarCandidatos(){
-    const tbody = document.querySelector("#tabelaCandidatos tbody");
+  function carregarCandidatos(){
+      const tbody = document.querySelector("#tabelaCandidatos tbody");
+      const filtro = document.getElementById('filtroUnidade');
 
-    onSnapshot(collection(db, "candidatos"), (querySnapshot) => {
+      onSnapshot(collection(db, "candidatos"), (querySnapshot) => {
         tbody.innerHTML = "";
-        const filtro = document.getElementById('filtroUnidade').value;
         querySnapshot.forEach((docSnap) => {
-            const c = docSnap.data();
-            if(filtro && c.unidade !== filtro) return;
-
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td data-label="Nome">${c.nome}</td>
-                <td data-label="Cargo">${c.cargo}</td>
-                <td data-label="Unidade">${c.unidade}</td>
-                <td data-label="Data">${formatarData(c.data)}</td>
-                <td data-label="Horário">${c.horario}</td>
-                <td data-label="Dias de Teste">${c.dias}</td>
-                <td data-label="Status" class="${c.status==='Aprovado'?'aprovado':c.status==='Reprovado'?'reprovado':'em-teste'}">${c.status}</td>
-                <td data-label="Ações">
-                    <button class="btn em-teste" onclick="incrementarDias('${docSnap.id}', ${c.dias})">+1 Dia</button>
-                    <button class="btn aprovado" onclick="alterarStatus('${docSnap.id}','Aprovado')">Aprovado</button>
-                    <button class="btn reprovado" onclick="alterarStatus('${docSnap.id}','Reprovado')">Reprovado</button>
-                    <button class="btn em-teste" onclick="alterarStatus('${docSnap.id}','Em Teste')">Em Teste</button>
-                    <button class="btn excluir" onclick="excluirCandidato('${docSnap.id}')">Excluir</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
+          const c = docSnap.data();
+          if(filtro.value && c.unidade !== filtro.value) return;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+              <td data-label="Nome">${c.nome}</td>
+              <td data-label="Cargo">${c.cargo}</td>
+              <td data-label="Unidade">${c.unidade}</td>
+              <td data-label="Data">${formatarData(c.data)}</td>
+              <td data-label="Horário">${c.horario}</td>
+              <td data-label="Dias de Teste">${c.dias}</td>
+              <td data-label="Status" class="${c.status==='Aprovado'?'aprovado':c.status==='Reprovado'?'reprovado':'em-teste'}">${c.status}</td>
+              <td data-label="Ações">
+                  <button class="btn em-teste" onclick="incrementarDias('${docSnap.id}', ${c.dias})">+1 Dia</button>
+                  <button class="btn aprovado" onclick="alterarStatus('${docSnap.id}','Aprovado')">Aprovado</button>
+                  <button class="btn reprovado" onclick="alterarStatus('${docSnap.id}','Reprovado')">Reprovado</button>
+                  <button class="btn em-teste" onclick="alterarStatus('${docSnap.id}','Em Teste')">Em Teste</button>
+                  <button class="btn excluir" onclick="excluirCandidato('${docSnap.id}')">Excluir</button>
+              </td>
+          `;
+          tbody.appendChild(tr);
         });
-    });
-}
+      });
+  }
 
-async function incrementarDias(id, dias){
-    const docRef = doc(db, "candidatos", id);
-    const novaData = new Date();
-    await updateDoc(docRef, {
-        dias: dias + 1,
-        data: novaData.toISOString().split('T')[0]
-    });
-}
+  async function incrementarDias(id, dias){
+      const docRef = doc(db, "candidatos", id);
+      const novaData = new Date();
+      await updateDoc(docRef, {
+          dias: dias + 1,
+          data: novaData.toISOString().split('T')[0]
+      });
+  }
 
-async function alterarStatus(id, novoStatus){
-    const docRef = doc(db, "candidatos", id);
-    await updateDoc(docRef, {status: novoStatus});
-}
+  async function alterarStatus(id, novoStatus){
+      const docRef = doc(db, "candidatos", id);
+      await updateDoc(docRef, {status: novoStatus});
+  }
 
-async function excluirCandidato(id){
-    if(confirm("Tem certeza que deseja excluir este candidato?")){
-        await deleteDoc(doc(db, "candidatos", id));
-    }
-}
+  async function excluirCandidato(id){
+      if(confirm("Tem certeza que deseja excluir este candidato?")){
+          await deleteDoc(doc(db, "candidatos", id));
+      }
+  }
 
-// Inicializa o listener
-carregarCandidatos();
+  // Inicializa o listener
+  carregarCandidatos();
 </script>
 </body>
 </html>
