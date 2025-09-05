@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Testes - Botânica Bistrô</title>
+<style>
+    body { font-family: 'Poppins', sans-serif; background-color: #f5f5f5; margin:0; padding:20px; }
+    h1 { text-align:center; color:#2E7D32; }
+
+    #formulario input, #formulario select { padding:5px; margin:5px; width: calc(100% - 22px); box-sizing: border-box; }
+    #formulario button { padding:5px 10px; margin:5px; width: calc(100% - 22px); }
+
+    table { width:100%; border-collapse: collapse; margin-top:20px; background:#fff; box-shadow:0 0 10px rgba(0,0,0,0.1);}
+    th, td { border:1px solid #ddd; padding:10px; text-align:center;}
+    th { background:#4CAF50; color:white; }
+    tr:nth-child(even){ background:#f2f2f2; }
+
+    .btn { padding:5px 10px; margin:2px; border:none; border-radius:6px; cursor:pointer; color:white; font-size:14px; }
+    .aprovado { background:#4CAF50; }
+    .reprovado { background:#f44336; }
+    .em-teste { background:#FF9800; }
+    .excluir { background:#9E9E9E; }
+
+    /* RESPONSIVIDADE */
+    @media (max-width: 768px) {
+        table, thead, tbody, th, td, tr { display: block; }
+        thead tr { display: none; }
+        tr { margin-bottom: 15px; border-bottom: 2px solid #ddd; }
+        td { text-align: right; padding-left: 50%; position: relative; }
+        td::before { 
+            content: attr(data-label); 
+            position: absolute; 
+            left: 10px; 
+            width: 45%; 
+            padding-left:5px;
+            font-weight: bold;
+            text-align:left;
+        }
+        .btn { font-size:12px; padding:5px; margin:2px 0; display:block; width: 100%; }
+    }
+</style>
+</head>
+<body>
+
+<h1>Controle de Testes - Botânica Bistrô</h1>
+
+<div id="formulario">
+    <input type="text" id="nome" placeholder="Nome do Candidato" required>
+    <select id="cargo">
+        <option value="">Selecione Cargo</option>
+        <option>Auxiliar de Atendimento</option>
+        <option>Auxiliar de Cozinha</option>
+        <option>Auxiliar de Serviços Gerais</option>
+        <option>Auxiliar de Confeitaria</option>
+    </select>
+    <select id="unidade">
+        <option value="">Selecione Unidade</option>
+        <option>Gávea</option>
+        <option>Jardim Botânico</option>
+        <option>Botafogo</option>
+        <option>Tijuca</option>
+    </select>
+    <input type="number" id="dias" placeholder="Dias de Teste" min="1" required>
+    <input type="date" id="data" required>
+    <input type="text" id="horario" placeholder="Horário (Ex: 09h-12h)" required>
+    <select id="status">
+        <option value="Em Teste">Em Teste</option>
+        <option value="Aprovado">Aprovado</option>
+        <option value="Reprovado">Reprovado</option>
+    </select>
+    <button onclick="adicionarCandidato()">Adicionar Candidato</button>
+</div>
+
+<table id="tabelaCandidatos">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Cargo</th>
+            <th>Unidade</th>
+            <th>Data</th>
+            <th>Horário</th>
+            <th>Dias de Teste</th>
+            <th>Status</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+// Função para formatar data para DD/MM/AAAA
+function formatarData(dataStr){
+    const data = new Date(dataStr);
+    const dia = String(data.getDate()).padStart(2,'0');
+    const mes = String(data.getMonth()+1).padStart(2,'0');
+    const ano = data.getFullYear();
+    return `${dia}/${mes}/${ano}`;
+}
+
+// Carregar candidatos salvos
+let candidatos = JSON.parse(localStorage.getItem('candidatos')) || [];
+
+function salvarLocalStorage() {
+    localStorage.setItem('candidatos', JSON.stringify(candidatos));
+}
+
+function adicionarCandidato() {
+    const nome = document.getElementById('nome').value;
+    const cargo = document.getElementById('cargo').value;
+    const unidade = document.getElementById('unidade').value;
+    const dias = parseInt(document.getElementById('dias').value);
+    const data = document.getElementById('data').value;
+    const horario = document.getElementById('horario').value;
+    const status = document.getElementById('status').value;
+
+    if(!nome || !cargo || !unidade || !dias || !data || !horario || !status) {
+        alert("Preencha todos os campos!");
+        return;
+    }
+
+    candidatos.push({nome, cargo, unidade, dias, data, horario, status});
+    salvarLocalStorage();
+    limparFormulario();
+    atualizarTabela();
+}
+
+function limparFormulario() {
+    document.getElementById('nome').value = '';
+    document.getElementById('cargo').value = '';
+    document.getElementById('unidade').value = '';
+    document.getElementById('dias').value = '';
+    document.getElementById('data').value = '';
+    document.getElementById('horario').value = '';
+    document.getElementById('status').value = 'Em Teste';
+}
+
+function atualizarTabela() {
+    const tbody = document.querySelector("#tabelaCandidatos tbody");
+    tbody.innerHTML = "";
+    candidatos.forEach((c, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td data-label="Nome">${c.nome}</td>
+            <td data-label="Cargo">${c.cargo}</td>
+            <td data-label="Unidade">${c.unidade}</td>
+            <td data-label="Data">${formatarData(c.data)}</td>
+            <td data-label="Horário">${c.horario}</td>
+            <td data-label="Dias de Teste">${c.dias}</td>
+            <td data-label="Status" class="${c.status==='Aprovado'?'aprovado':c.status==='Reprovado'?'reprovado':'em-teste'}">${c.status}</td>
+            <td data-label="Ações">
+                <button class="btn em-teste" onclick="incrementarDias(${i})">+1 Dia</button>
+                <button class="btn aprovado" onclick="alterarStatus(${i},'Aprovado')">Aprovado</button>
+                <button class="btn reprovado" onclick="alterarStatus(${i},'Reprovado')">Reprovado</button>
+                <button class="btn em-teste" onclick="alterarStatus(${i},'Em Teste')">Em Teste</button>
+                <button class="btn excluir" onclick="excluirCandidato(${i})">Excluir</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function incrementarDias(index){
+    candidatos[index].dias += 1;
+    const novaData = new Date(candidatos[index].data);
+    novaData.setDate(novaData.getDate() + 1);
+    candidatos[index].data = novaData.toISOString().split('T')[0];
+    salvarLocalStorage();
+    atualizarTabela();
+}
+
+function alterarStatus(index, novoStatus){
+    candidatos[index].status = novoStatus;
+    salvarLocalStorage();
+    atualizarTabela();
+}
+
+function excluirCandidato(index){
+    if(confirm("Tem certeza que deseja excluir este candidato?")){
+        candidatos.splice(index,1);
+        salvarLocalStorage();
+        atualizarTabela();
+    }
+}
+
+// Inicializa tabela
+atualizarTabela();
+</script>
+
+</body>
+</html>

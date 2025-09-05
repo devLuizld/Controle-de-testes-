@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Botânica Bistrô</title>
+<style>
+    body { 
+        font-family: 'Poppins', sans-serif; 
+        background-color:#f5f5f5; 
+        display:flex; 
+        justify-content:center; 
+        align-items:center; 
+        height:100vh; 
+        margin:0; 
+        padding:10px;
+    }
+    #login-container { 
+        background:#fff; 
+        padding:30px; 
+        border-radius:12px; 
+        box-shadow:0 0 15px rgba(0,0,0,0.2); 
+        width:100%; 
+        max-width:400px; 
+        box-sizing:border-box;
+    }
+    h2 { text-align:center; color:#2E7D32; margin-bottom:20px; }
+    input { width:100%; padding:12px; margin:10px 0; border:1px solid #ddd; border-radius:6px; font-size:16px; box-sizing:border-box; }
+    button { 
+        width:100%; 
+        padding:12px; 
+        background:#4CAF50; 
+        color:white; 
+        border:none; 
+        border-radius:6px; 
+        cursor:pointer; 
+        font-size:16px; 
+        margin-top:10px;
+    }
+    button:hover { background:#388E3C; }
+    .erro { color:red; font-size:14px; text-align:center; margin-top:5px; }
+
+    /* Responsividade extra */
+    @media (max-width: 480px) {
+        #login-container { padding:20px; }
+        input, button { font-size:14px; padding:10px; }
+        h2 { font-size:20px; }
+    }
+</style>
+</head>
+<body>
+
+<div id="login-container">
+    <h2>Login</h2>
+    <input type="text" id="usuario" placeholder="Usuário">
+    <input type="password" id="senha" placeholder="Senha">
+    <div class="erro" id="erro"></div>
+    <button onclick="login()">Entrar</button>
+</div>
+
+<script>
+function login() {
+    const usuario = document.getElementById('usuario').value;
+    const senha = document.getElementById('senha').value;
+    const erro = document.getElementById('erro');
+
+    if(usuario === 'Botanica@' && senha === '1234') {
+        // Redireciona para a página do dashboard
+        window.location.href = 'dashboard.html';
+    } else {
+        erro.textContent = 'Usuário ou senha incorretos!';
+    }
+}
+</script>
+
+</body>
+</html>
