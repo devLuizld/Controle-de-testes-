@@ -6,33 +6,30 @@
 <title>Controle de Testes - Botânica Bistrô</title>
 <link rel="icon" href="https://static.thenounproject.com/png/green-flower-icon-3807932-512.png" type="image/png">
 <style>
-    body { font-family: 'Poppins', sans-serif; background-color: #f5f5f5; margin:0; padding:20px; }
-    h1 { text-align:center; color:#2E7D32; }
-    #formulario input, #formulario select { padding:5px; margin:5px; }
-    #formulario button { padding:5px 10px; margin:5px; }
-    table { width:100%; border-collapse: collapse; margin-top:20px; background:#fff; box-shadow:0 0 10px rgba(0,0,0,0.1);}
-    th, td { border:1px solid #ddd; padding:10px; text-align:center;}
-    th { background:#4CAF50; color:white; }
-    tr:nth-child(even){ background:#f2f2f2; }
-    .btn { padding:5px 10px; margin:2px; border:none; border-radius:6px; cursor:pointer; color:white; }
-    .aprovado { background:#4CAF50; }
-    .reprovado { background:#f44336; }
-    .em-teste { background:#FF9800; }
-    .excluir { background:#9E9E9E; }
+body { font-family: 'Poppins', sans-serif; background-color: #f5f5f5; margin:0; padding:20px; }
+h1 { text-align:center; color:#2E7D32; }
+#formulario input, #formulario select { padding:5px; margin:5px; }
+#formulario button { padding:5px 10px; margin:5px; }
+table { width:100%; border-collapse: collapse; margin-top:20px; background:#fff; box-shadow:0 0 10px rgba(0,0,0,0.1);}
+th, td { border:1px solid #ddd; padding:10px; text-align:center;}
+th { background:#4CAF50; color:white; }
+tr:nth-child(even){ background:#f2f2f2; }
+.btn { padding:5px 10px; margin:2px; border:none; border-radius:6px; cursor:pointer; color:white; }
+.aprovado { background:#4CAF50; }
+.reprovado { background:#f44336; }
+.em-teste { background:#FF9800; }
+.excluir { background:#9E9E9E; }
 
-    @media (max-width: 768px) {
-        table, thead, tbody, th, td, tr { display:block; }
-        th { display:none; }
-        tr { margin-bottom:15px; border:1px solid #ddd; border-radius:10px; padding:10px; background:#fff; }
-        td { border:none; padding:5px; text-align:right; position: relative; }
-        td::before { content: attr(data-label); position: absolute; left:10px; width: 45%; font-weight:bold; text-align:left; }
-        #formulario input, #formulario select, #formulario button { width:100%; box-sizing:border-box; }
-        .btn { font-size:12px; padding:4px 8px; margin:2px; }
-    }
+@media (max-width: 768px) {
+    table, thead, tbody, th, td, tr { display:block; }
+    th { display:none; }
+    tr { margin-bottom:15px; border:1px solid #ddd; border-radius:10px; padding:10px; background:#fff; }
+    td { border:none; padding:5px; text-align:right; position: relative; }
+    td::before { content: attr(data-label); position: absolute; left:10px; width: 45%; font-weight:bold; text-align:left; }
+    #formulario input, #formulario select, #formulario button { width:100%; box-sizing:border-box; }
+    .btn { font-size:12px; padding:4px 8px; margin:2px; }
+}
 </style>
-<!-- Firebase compat scripts -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -64,7 +61,7 @@
     </select>
     <button onclick="adicionarCandidato()">Adicionar Candidato</button>
 
-    <select id="filtroUnidade" onchange="filtrarCandidatos()">
+    <select id="filtroUnidade" onchange="carregarCandidatos()">
         <option value="">Filtrar por Unidade</option>
         <option>Gávea</option>
         <option>Jardim Botânico</option>
@@ -90,50 +87,33 @@
 </table>
 
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyC7b7aO7_LBCk2-HGPHMj1DB1Haty8eruc",
-    authDomain: "controle-de-testes.firebaseapp.com",
-    projectId: "controle-de-testes",
-    storageBucket: "controle-de-testes.appspot.com",
-    messagingSenderId: "624074959757",
-    appId: "1:624074959757:web:604ed8e19227181fe8ebc4",
-    measurementId: "G-H8L8DMH6R2"
-};
+const API_URL = "https://script.google.com/macros/s/AKfycbxs76x5U_ZX5T8RRzxdtnDtK9zLWtg3S3zybEcy_7GQ7aHIxlnsoFozeDhp3Jo43dP_rg/exec"; // substitua pelo seu URL
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-function formatarData(dataStr){
-    const data = new Date(dataStr);
-    const dia = String(data.getDate()).padStart(2,'0');
-    const mes = String(data.getMonth()+1).padStart(2,'0');
-    const ano = data.getFullYear();
-    return `${dia}/${mes}/${ano}`;
-}
-
+// Adicionar candidato
 async function adicionarCandidato() {
     const nome = document.getElementById('nome').value;
     const cargo = document.getElementById('cargo').value;
     const unidade = document.getElementById('unidade').value;
-    const dias = parseInt(document.getElementById('dias').value);
+    const dias = document.getElementById('dias').value;
     const data = document.getElementById('data').value;
     const horario = document.getElementById('horario').value;
     const status = document.getElementById('status').value;
 
-    if(!nome || !cargo || !unidade || !dias || !data || !horario || !status) {
+    if(!nome || !cargo || !unidade || !dias || !data || !horario || !status){
         alert("Preencha todos os campos!");
         return;
     }
 
-    try {
-        await db.collection("candidatos").add({ nome, cargo, unidade, dias, data, horario, status });
-        limparFormulario();
-    } catch (e) {
-        console.error("Erro ao adicionar candidato: ", e);
-        alert("Erro ao adicionar candidato. Veja o console.");
-    }
+    await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({acao:"add", Nome:nome, Cargo:cargo, Unidade:unidade, Dias:dias, Data:data, Horário:horario, Status:status})
+    });
+
+    limparFormulario();
+    carregarCandidatos();
 }
 
+// Limpar formulário
 function limparFormulario() {
     document.getElementById('nome').value = '';
     document.getElementById('cargo').value = '';
@@ -144,64 +124,63 @@ function limparFormulario() {
     document.getElementById('status').value = 'Em Teste';
 }
 
-function carregarCandidatos(){
-    const tbody = document.querySelector("#tabelaCandidatos tbody");
-
-    db.collection("candidatos").onSnapshot((querySnapshot) => {
-        tbody.innerHTML = "";
-        const filtro = document.getElementById('filtroUnidade').value;
-        querySnapshot.forEach((docSnap) => {
-            const c = docSnap.data();
-            if(filtro && c.unidade !== filtro) return;
-
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td data-label="Nome">${c.nome}</td>
-                <td data-label="Cargo">${c.cargo}</td>
-                <td data-label="Unidade">${c.unidade}</td>
-                <td data-label="Data">${formatarData(c.data)}</td>
-                <td data-label="Horário">${c.horario}</td>
-                <td data-label="Dias de Teste">${c.dias}</td>
-                <td data-label="Status" class="${c.status==='Aprovado'?'aprovado':c.status==='Reprovado'?'reprovado':'em-teste'}">${c.status}</td>
-                <td data-label="Ações">
-                    <button class="btn em-teste" onclick="incrementarDias('${docSnap.id}', ${c.dias})">+1 Dia</button>
-                    <button class="btn aprovado" onclick="alterarStatus('${docSnap.id}','Aprovado')">Aprovado</button>
-                    <button class="btn reprovado" onclick="alterarStatus('${docSnap.id}','Reprovado')">Reprovado</button>
-                    <button class="btn em-teste" onclick="alterarStatus('${docSnap.id}','Em Teste')">Em Teste</button>
-                    <button class="btn excluir" onclick="excluirCandidato('${docSnap.id}')">Excluir</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
+// Atualizar candidato
+async function atualizarCandidato(rowNumber, campo, valor){
+    await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({acao:"update", rowNumber:rowNumber, campo:campo, valor:valor})
     });
-}
-
-async function incrementarDias(id, dias){
-    const docRef = db.collection("candidatos").doc(id);
-    const novaData = new Date();
-    await docRef.update({
-        dias: dias + 1,
-        data: novaData.toISOString().split('T')[0]
-    });
-}
-
-async function alterarStatus(id, novoStatus){
-    const docRef = db.collection("candidatos").doc(id);
-    await docRef.update({status: novoStatus});
-}
-
-async function excluirCandidato(id){
-    if(confirm("Tem certeza que deseja excluir este candidato?")){
-        await db.collection("candidatos").doc(id).delete();
-    }
-}
-
-function filtrarCandidatos() {
     carregarCandidatos();
 }
 
-// Inicializa o listener
+// Excluir candidato
+async function excluirCandidato(rowNumber){
+    if(confirm("Tem certeza que deseja excluir este candidato?")){
+        await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({acao:"delete", rowNumber:rowNumber})
+        });
+        carregarCandidatos();
+    }
+}
+
+// Carregar candidatos
+async function carregarCandidatos() {
+    const tbody = document.querySelector("#tabelaCandidatos tbody");
+    const resp = await fetch(API_URL);
+    const data = await resp.json();
+
+    const filtro = document.getElementById('filtroUnidade').value;
+    tbody.innerHTML = "";
+
+    data.forEach((c) => {
+        if(filtro && c.Unidade !== filtro) return;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td data-label="Nome">${c.Nome}</td>
+            <td data-label="Cargo">${c.Cargo}</td>
+            <td data-label="Unidade">${c.Unidade}</td>
+            <td data-label="Data">${c.Data}</td>
+            <td data-label="Horário">${c.Horário}</td>
+            <td data-label="Dias de Teste">${c.Dias}</td>
+            <td data-label="Status" class="${c.Status==='Aprovado'?'aprovado':c.Status==='Reprovado'?'reprovado':'em-teste'}">${c.Status}</td>
+            <td data-label="Ações">
+                <button class="btn em-teste" onclick="atualizarCandidato(${c.rowNumber}, 'Dias', ${parseInt(c.Dias)+1})">+1 Dia</button>
+                <button class="btn aprovado" onclick="atualizarCandidato(${c.rowNumber}, 'Status', 'Aprovado')">Aprovado</button>
+                <button class="btn reprovado" onclick="atualizarCandidato(${c.rowNumber}, 'Status', 'Reprovado')">Reprovado</button>
+                <button class="btn em-teste" onclick="atualizarCandidato(${c.rowNumber}, 'Status', 'Em Teste')">Em Teste</button>
+                <button class="btn excluir" onclick="excluirCandidato(${c.rowNumber})">Excluir</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Atualiza automaticamente a cada 3 segundos
+setInterval(carregarCandidatos, 3000);
 carregarCandidatos();
 </script>
+
 </body>
 </html>
