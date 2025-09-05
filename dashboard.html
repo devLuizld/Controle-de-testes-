@@ -4,40 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Controle de Testes - Botânica Bistrô</title>
+<!-- Favicon de flor verde -->
+<link rel="icon" href="https://static.thenounproject.com/png/green-flower-icon-3807932-512.png" type="image/png">
+
 <style>
     body { font-family: 'Poppins', sans-serif; background-color: #f5f5f5; margin:0; padding:20px; }
     h1 { text-align:center; color:#2E7D32; }
-
-    #formulario input, #formulario select { padding:5px; margin:5px; width: calc(100% - 22px); box-sizing: border-box; }
-    #formulario button { padding:5px 10px; margin:5px; width: calc(100% - 22px); }
-
+    #formulario input, #formulario select { padding:5px; margin:5px; }
+    #formulario button { padding:5px 10px; margin:5px; }
     table { width:100%; border-collapse: collapse; margin-top:20px; background:#fff; box-shadow:0 0 10px rgba(0,0,0,0.1);}
     th, td { border:1px solid #ddd; padding:10px; text-align:center;}
     th { background:#4CAF50; color:white; }
     tr:nth-child(even){ background:#f2f2f2; }
-
-    .btn { padding:5px 10px; margin:2px; border:none; border-radius:6px; cursor:pointer; color:white; font-size:14px; }
+    .btn { padding:5px 10px; margin:2px; border:none; border-radius:6px; cursor:pointer; color:white; }
     .aprovado { background:#4CAF50; }
     .reprovado { background:#f44336; }
     .em-teste { background:#FF9800; }
     .excluir { background:#9E9E9E; }
 
-    /* RESPONSIVIDADE */
+    /* RESPONSIVIDADE MÓVEL */
     @media (max-width: 768px) {
-        table, thead, tbody, th, td, tr { display: block; }
-        thead tr { display: none; }
-        tr { margin-bottom: 15px; border-bottom: 2px solid #ddd; }
-        td { text-align: right; padding-left: 50%; position: relative; }
-        td::before { 
-            content: attr(data-label); 
-            position: absolute; 
-            left: 10px; 
-            width: 45%; 
-            padding-left:5px;
-            font-weight: bold;
+        table, thead, tbody, th, td, tr { display:block; }
+        th { display:none; }
+        tr { margin-bottom:15px; border:1px solid #ddd; border-radius:10px; padding:10px; background:#fff; }
+        td { border:none; padding:5px; text-align:right; position: relative; }
+        td::before {
+            content: attr(data-label);
+            position: absolute;
+            left:10px;
+            width: 45%;
+            font-weight:bold;
             text-align:left;
         }
-        .btn { font-size:12px; padding:5px; margin:2px 0; display:block; width: 100%; }
+        #formulario input, #formulario select, #formulario button { width:100%; box-sizing:border-box; }
+        .btn { font-size:12px; padding:4px 8px; margin:2px; }
     }
 </style>
 </head>
@@ -89,6 +89,9 @@
 </table>
 
 <script>
+
+
+
 // Função para formatar data para DD/MM/AAAA
 function formatarData(dataStr){
     const data = new Date(dataStr);
