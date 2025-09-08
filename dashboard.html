@@ -80,7 +80,7 @@ tr:nth-child(even){ background:#f2f2f2; }
 </table>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxggAIQcKetPfwv4VtaVxHE2ziwEkSR4KLPt0yKEjXPfu_eB8oDOAd56Iu8h7bZUgUk/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwusOEWLXAlDZu1ncOfRc34lQhvxgbPohhZOHAtiggZenMJNGn7h4c7AE_z6RqXUPjS/exec";
 
 // Formata data DD/MM/YYYY
 function formatarData(valor){
@@ -102,7 +102,7 @@ async function carregarCandidatos(){
     const tbody = document.querySelector("#tabelaCandidatos tbody");
     tbody.innerHTML = "";
     try{
-        const resp = await fetch(API_URL);
+        const resp = await fetch(API_URL + "?acao=list"); // Garantir ação de listar
         const dados = await resp.json();
         dados.forEach(c => {
             const tr = document.createElement("tr");
@@ -198,7 +198,7 @@ async function mudarStatus(rowNumber, novoStatus){
 
 // Adicionar +1 dia
 async function adicionarUmDia(rowNumber){
-    const resp = await fetch(API_URL);
+    const resp = await fetch(API_URL + "?acao=list");
     const dados = await resp.json();
     const candidato = dados.find(c => c.rowNumber === rowNumber);
     if(!candidato) return;
