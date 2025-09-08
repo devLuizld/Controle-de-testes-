@@ -4,21 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Controle de Testes - Botânica Bistrô</title>
-<link rel="icon" href="https://static.thenounproject.com/png/green-flower-icon-3807932-512.png" type="image/png">
+<link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Tulipa_green_icon.svg/1024px-Tulipa_green_icon.svg.png" type="image/png">
 <style>
-body { font-family: 'Poppins', sans-serif; background-color: #f5f5f5; margin:0; padding:20px; }
+body { font-family: 'Poppins', sans-serif; background-color: #f0f9f0; margin:0; padding:20px; }
 h1 { text-align:center; color:#2E7D32; }
-#formulario input, #formulario select { padding:5px; margin:5px; }
-#formulario button { padding:5px 10px; margin:5px; }
+#formulario input, #formulario select, #formulario button { padding:5px; margin:5px; }
+#formulario button { cursor:pointer; background:#4CAF50; color:white; border:none; border-radius:6px; }
 table { width:100%; border-collapse: collapse; margin-top:20px; background:#fff; box-shadow:0 0 10px rgba(0,0,0,0.1);}
 th, td { border:1px solid #ddd; padding:10px; text-align:center;}
 th { background:#4CAF50; color:white; }
 tr:nth-child(even){ background:#f2f2f2; }
+
 .btn { padding:5px 10px; margin:2px; border:none; border-radius:6px; cursor:pointer; color:white; }
 .aprovado { background:#4CAF50; }
 .reprovado { background:#f44336; }
 .em-teste { background:#FF9800; }
 .excluir { background:#9E9E9E; }
+.mais-dia { background:#2196F3; }
 
 @media (max-width: 768px) {
     table, thead, tbody, th, td, tr { display:block; }
@@ -27,7 +29,6 @@ tr:nth-child(even){ background:#f2f2f2; }
     td { border:none; padding:5px; text-align:right; position: relative; }
     td::before { content: attr(data-label); position: absolute; left:10px; width: 45%; font-weight:bold; text-align:left; }
     #formulario input, #formulario select, #formulario button { width:100%; box-sizing:border-box; }
-    .btn { font-size:12px; padding:4px 8px; margin:2px; }
 }
 </style>
 </head>
@@ -59,15 +60,7 @@ tr:nth-child(even){ background:#f2f2f2; }
         <option value="Aprovado">Aprovado</option>
         <option value="Reprovado">Reprovado</option>
     </select>
-    <button onclick="adicionarCandidato()">Adicionar Candidato</button>
-
-    <select id="filtroUnidade" onchange="carregarCandidatos()">
-        <option value="">Filtrar por Unidade</option>
-        <option>Gávea</option>
-        <option>Jardim Botânico</option>
-        <option>Botafogo</option>
-        <option>Tijuca</option>
-    </select>
+    <button id="btnAdicionar">Adicionar Candidato</button>
 </div>
 
 <table id="tabelaCandidatos">
@@ -76,9 +69,9 @@ tr:nth-child(even){ background:#f2f2f2; }
             <th>Nome</th>
             <th>Cargo</th>
             <th>Unidade</th>
+            <th>Dias</th>
             <th>Data</th>
-            <th>Horário</th>
-            <th>Dias de Teste</th>
+            <th>Horários</th>
             <th>Status</th>
             <th>Ações</th>
         </tr>
@@ -87,16 +80,65 @@ tr:nth-child(even){ background:#f2f2f2; }
 </table>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxs76x5U_ZX5T8RRzxdtnDtK9zLWtg3S3zybEcy_7GQ7aHIxlnsoFozeDhp3Jo43dP_rg/exec"; // substitua pelo seu URL
+const API_URL = "https://script.google.com/macros/s/AKfycbxggAIQcKetPfwv4VtaVxHE2ziwEkSR4KLPt0yKEjXPfu_eB8oDOAd56Iu8h7bZUgUk/exec";
+
+// Formata data DD/MM/YYYY
+function formatarData(valor){
+    if(!valor) return "";
+    const d = new Date(valor);
+    if(!isNaN(d)) return d.toLocaleDateString('pt-BR');
+    return valor;
+}
+
+// Classe de status
+function statusClass(status){
+    if(status === "Aprovado") return "aprovado";
+    if(status === "Reprovado") return "reprovado";
+    return "em-teste";
+}
+
+// Carrega candidatos
+async function carregarCandidatos(){
+    const tbody = document.querySelector("#tabelaCandidatos tbody");
+    tbody.innerHTML = "";
+    try{
+        const resp = await fetch(API_URL);
+        const dados = await resp.json();
+        dados.forEach(c => {
+            const tr = document.createElement("tr");
+            tr.dataset.row = c.rowNumber;
+            const horario = c.Horários || c.Horario || "";
+            tr.innerHTML = `
+                <td data-label="Nome">${c.Nome || ""}</td>
+                <td data-label="Cargo">${c.Cargo || ""}</td>
+                <td data-label="Unidade">${c.Unidade || ""}</td>
+                <td data-label="Dias">${c.Dias || ""}</td>
+                <td data-label="Data">${formatarData(c.Data)}</td>
+                <td data-label="Horários">${horario}</td>
+                <td data-label="Status"><span class="btn ${statusClass(c.Status)}">${c.Status}</span></td>
+                <td data-label="Ações">
+                    <button class="btn aprovado" onclick="mudarStatus(${c.rowNumber},'Aprovado')">Aprovado</button>
+                    <button class="btn reprovado" onclick="mudarStatus(${c.rowNumber},'Reprovado')">Reprovado</button>
+                    <button class="btn em-teste" onclick="mudarStatus(${c.rowNumber},'Em Teste')">Em Teste</button>
+                    <button class="btn mais-dia" onclick="adicionarUmDia(${c.rowNumber})">+1 dia</button>
+                    <button class="btn excluir" onclick="excluirCandidato(${c.rowNumber})">Excluir</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }catch(err){
+        console.error("Erro ao carregar:",err);
+    }
+}
 
 // Adicionar candidato
-async function adicionarCandidato() {
-    const nome = document.getElementById('nome').value;
-    const cargo = document.getElementById('cargo').value;
-    const unidade = document.getElementById('unidade').value;
+async function adicionarCandidato(){
+    const nome = document.getElementById('nome').value.trim();
+    const cargo = document.getElementById('cargo').value.trim();
+    const unidade = document.getElementById('unidade').value.trim();
     const dias = document.getElementById('dias').value;
     const data = document.getElementById('data').value;
-    const horario = document.getElementById('horario').value;
+    const horario = document.getElementById('horario').value.trim();
     const status = document.getElementById('status').value;
 
     if(!nome || !cargo || !unidade || !dias || !data || !horario || !status){
@@ -104,82 +146,97 @@ async function adicionarCandidato() {
         return;
     }
 
-    await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({acao:"add", Nome:nome, Cargo:cargo, Unidade:unidade, Dias:dias, Data:data, Horário:horario, Status:status})
-    });
+    const params = {
+        acao: "add",
+        Nome: nome,
+        Cargo: cargo,
+        Unidade: unidade,
+        Dias: dias,
+        Data: data,
+        Horários: horario,
+        Status: status
+    };
 
-    limparFormulario();
+    try {
+        await fetch(API_URL,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify(params)
+        });
+        limparFormulario();
+        carregarCandidatos();
+    } catch(e){
+        console.error("Erro ao adicionar candidato:", e);
+        alert("Erro ao adicionar candidato. Confira console.");
+    }
+}
+
+function limparFormulario(){
+    document.getElementById('nome').value="";
+    document.getElementById('cargo').value="";
+    document.getElementById('unidade').value="";
+    document.getElementById('dias').value="";
+    document.getElementById('data').value="";
+    document.getElementById('horario').value="";
+    document.getElementById('status').value="Em Teste";
+}
+
+// Mudar status
+async function mudarStatus(rowNumber, novoStatus){
+    await fetch(API_URL,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+            acao:"update",
+            rowNumber,
+            campo:"Status",
+            valor: novoStatus
+        })
+    });
     carregarCandidatos();
 }
 
-// Limpar formulário
-function limparFormulario() {
-    document.getElementById('nome').value = '';
-    document.getElementById('cargo').value = '';
-    document.getElementById('unidade').value = '';
-    document.getElementById('dias').value = '';
-    document.getElementById('data').value = '';
-    document.getElementById('horario').value = '';
-    document.getElementById('status').value = 'Em Teste';
-}
+// Adicionar +1 dia
+async function adicionarUmDia(rowNumber){
+    const resp = await fetch(API_URL);
+    const dados = await resp.json();
+    const candidato = dados.find(c => c.rowNumber === rowNumber);
+    if(!candidato) return;
+    const dataAtual = new Date(candidato.Data);
+    dataAtual.setDate(dataAtual.getDate() + 1);
+    const dataFormatada = dataAtual.toISOString().split("T")[0];
 
-// Atualizar candidato
-async function atualizarCandidato(rowNumber, campo, valor){
-    await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({acao:"update", rowNumber:rowNumber, campo:campo, valor:valor})
+    await fetch(API_URL,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+            acao:"update",
+            rowNumber,
+            campo:"Data",
+            valor: dataFormatada
+        })
     });
     carregarCandidatos();
 }
 
 // Excluir candidato
 async function excluirCandidato(rowNumber){
-    if(confirm("Tem certeza que deseja excluir este candidato?")){
-        await fetch(API_URL, {
-            method: "POST",
-            body: JSON.stringify({acao:"delete", rowNumber:rowNumber})
-        });
-        carregarCandidatos();
-    }
-}
-
-// Carregar candidatos
-async function carregarCandidatos() {
-    const tbody = document.querySelector("#tabelaCandidatos tbody");
-    const resp = await fetch(API_URL);
-    const data = await resp.json();
-
-    const filtro = document.getElementById('filtroUnidade').value;
-    tbody.innerHTML = "";
-
-    data.forEach((c) => {
-        if(filtro && c.Unidade !== filtro) return;
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td data-label="Nome">${c.Nome}</td>
-            <td data-label="Cargo">${c.Cargo}</td>
-            <td data-label="Unidade">${c.Unidade}</td>
-            <td data-label="Data">${c.Data}</td>
-            <td data-label="Horário">${c.Horário}</td>
-            <td data-label="Dias de Teste">${c.Dias}</td>
-            <td data-label="Status" class="${c.Status==='Aprovado'?'aprovado':c.Status==='Reprovado'?'reprovado':'em-teste'}">${c.Status}</td>
-            <td data-label="Ações">
-                <button class="btn em-teste" onclick="atualizarCandidato(${c.rowNumber}, 'Dias', ${parseInt(c.Dias)+1})">+1 Dia</button>
-                <button class="btn aprovado" onclick="atualizarCandidato(${c.rowNumber}, 'Status', 'Aprovado')">Aprovado</button>
-                <button class="btn reprovado" onclick="atualizarCandidato(${c.rowNumber}, 'Status', 'Reprovado')">Reprovado</button>
-                <button class="btn em-teste" onclick="atualizarCandidato(${c.rowNumber}, 'Status', 'Em Teste')">Em Teste</button>
-                <button class="btn excluir" onclick="excluirCandidato(${c.rowNumber})">Excluir</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
+    await fetch(API_URL,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+            acao:"delete",
+            rowNumber
+        })
     });
+    carregarCandidatos();
 }
 
-// Atualiza automaticamente a cada 3 segundos
-setInterval(carregarCandidatos, 3000);
-carregarCandidatos();
+// Inicialização
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("btnAdicionar").addEventListener("click", adicionarCandidato);
+    carregarCandidatos();
+});
 </script>
 
 </body>
